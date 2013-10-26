@@ -60,7 +60,14 @@ start_state <- new_state("Hi! I'm swirl! I'm
   talking whenever you see output that starts with |. Otherwise you'll be
   interacting with R in exactly the same way you will when I'm not around.
 
-  Type nxt() now to get started!", "assignment")
+  Type nxt() now to get started!", "video")
+
+video_state_test <- function(tree){
+  readline("ANSWER: ")
+  return(TRUE)
+}
+
+video_state <- new_state("Would you like to watch a video?", "assignment", video_state_test)
 
 assignment_state_test <- function(tree) {
   is_assgn <- identical(treetop(tree), "<-")
