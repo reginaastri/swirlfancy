@@ -22,12 +22,6 @@ byeswirl <- function() {
 
 jmp <- function(state) {
   if (is.null(state)) return(byeswirl())
-
-#    if(is.character(state)){
-#      state <- get(str_c(state, "_state"))
-#    }
-
-#   swirlenv$next_state <- state$next_state
   swirlenv$next_state <- nextState(state)
   
   if (!is.null(state$test)) {
