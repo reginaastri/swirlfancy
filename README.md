@@ -1,7 +1,6 @@
-demo throwing all the logic in callback
-==========
+## demo: sequencing logic relegated to states 
 
-Handling everything from the callback.
+Sequencing logic is relegated to individual units of instruction, represented as "states" which belong to various S3 classes. States return instructions to the controlling callback. Instructions depend on a state's class and user behavior. At the moment only two classes are implemented, a default and a class for question/command units.
 
 The demo is limited to Module 2 of Data Analysis, represented as a csv file with a few manual alterations. Features such as support for multiple users, or tracking user progress are not implemented.
 
