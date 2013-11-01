@@ -48,9 +48,9 @@ bye <- function(){
   invisible()
 }
 
-cback <- function(...){
-  if(identical(..1, parse(text="nxt()")[[1]]) ||
-       identical(..1, parse(text="hi()")[[1]])){
+cback <- function(expr, val, ok, vis){
+  if(identical(expr, parse(text="nxt()")[[1]]) ||
+       identical(expr, parse(text="hi()")[[1]])){
     module$suspended <- FALSE
   }
   if(module$suspended)return(TRUE)
@@ -59,9 +59,13 @@ cback <- function(...){
   while(n < 20){
     n <- n+1
     state <- module$state
-    response <- doStage(state)
+    response <- doStage(state, expr, val)
     module$suspended <- response$suspend
-    if(response$finished)module$state <- nextState(state)
+    if(response$finished){
+      module$state <- nextState(state)
+    } else {
+      module$state <- response$state
+    }
     if(response$prompt)break
   } 
   return(TRUE)
@@ -69,10 +73,10 @@ cback <- function(...){
 
 ### STATES
 
-doStage <- function(state)UseMethod("doStage")
+doStage <- function(state, expr, val)UseMethod("doStage")
 nextState <- function(state)UseMethod("nextState")
 
-doStage.default <- function(state){
+doStage.default <- function(state, expr, val){
   frndlyOut(state$content[1,"Output"])
   state$stage <- state$stage+1
   temp <- readline("Press <enter> to continue: ")
@@ -83,6 +87,34 @@ doStage.default <- function(state){
 
 nextState.default <- function(state){
   return(makeState(1+state$row))
+}
+
+doStage.command <- function(state, expr, val){
+  if(state$stage == 1){
+    frndlyOut(state$content[1,"Output"])
+    state$stage <- 2
+    return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+  } else if(state$stage == 2){
+    correct.expr <- parse(text=state$content[,"Correct.Answer"])
+    ans.is.correct <- identical(val, eval(correct.expr))
+    call.is.correct <- identical(expr, correct.expr[[1]])
+    if(ans.is.correct && call.is.correct){
+      respond(TRUE)
+      suspend <- suspendQ()
+      state$stage <- -1
+      return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+    } else if(ans.is.correct && !call.is.correct){
+      state$stage <- -1
+      frndlyOut(paste("You got the right value but used a different expression for the purpose. You entered ", as.character(as.expression(expr)),", while I had expected", state$content[,"Correct.Answer"]))
+      suspend <- suspendQ()
+      return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+    } else {
+      respond(FALSE)
+      state$stage <- 2 # Try again, after hint
+      frndlyOut(state$content[1,"Hint"])
+      return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+    }
+  }
 }
 
 ### UTILS
@@ -96,4 +128,19 @@ frndlyOut <- function(...) {
   # Start each line with "| " (str_c is in package stringr)
   # and display the result.
   message(str_c("| ", wrapped, collapse = "\n"))
+}
+
+respond <- function(correct){
+  if(correct){
+    frndlyOut("That is correct. Brilliant!")
+  } else {
+    frndlyOut("Sorry. That's not quite what I need.")
+  }
+}
+
+suspendQ <- function(){
+  temp <- readline("Press <enter> to continue: ")
+  suspend <- temp != ""
+  if(suspend)frndlyOut("Type nxt() to continue.")
+  return(suspend)
 }
