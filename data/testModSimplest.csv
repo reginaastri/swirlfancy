@@ -1,0 +1,5 @@
+OutputType,Output,AnswerType,AnswerTests,Hint,Notes
+text,"Hi, welcome to swirl! Today, we're going to store some numbers in a vector, then take the mean of those numbers. I'm assuming you've already learned how to create variables and call functions.",,,,Simple output to user
+question,"First, create a vector of the numbers 2, 3, 6, and 9 using the c() function and store that vector in a variable called nums.",command,"nums <- c(2, 3, 6, 9)",Type ?c to view the help file for the c() function.,Should test that the user's command matches the command in AnswerTests. Let's remove all whitespace before comparing.
+question,Now compute the mean of these numbers by calling the mean() function on this new vector.,command,mean(nums),Type ?mean to view the help file for the mean() function.,Same
+text,Great work! Now you know how to compute the mean of a bunch of numbers in R.,,,,Simple output to user
