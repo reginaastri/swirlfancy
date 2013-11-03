@@ -89,6 +89,54 @@ nextState.default <- function(state){
   return(makeState(1+state$row))
 }
 
+doStage.video <- function(state, expr, val){
+  frndlyOut(state$content[,"Output"])
+  resp <- readline("ANSWER: ")
+  state$stage <- -1
+  if(resp %in% c("y", "Y", "yes", "Yes")){
+    browseURL(state$content[,"Video"])
+    frndlyOut("Type nxt() to continue.")
+    return(list(finished=TRUE, prompt=TRUE, suspend=TRUE, state=state))
+  } else {
+    suspend <- suspendQ()
+    return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+  }
+}
+
+doStage.figure <- function(state, exper, val){
+  frndlyOut(state$content[,"Output"])
+  file.path <- paste("R",state$content[,"Figure"],sep="/")
+  source(file=file.path, local=TRUE)
+  if(state$content[,"Figure.Type"] == "addition"){
+    frndlyOut("I'm displaying the previous plot in case you need to refer back to it.")}
+  suspend <- suspendQ()
+  state$stage <- -1
+  return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+}
+
+doStage.multiple <- function(state, expr, val){
+  if(state$stage==1){
+    frndlyOut(state$content[,"Output"])
+  } else {
+    # There may not be a hint, but we handle that below
+    frndlyOut(state$content[,"Hint"])
+  }
+  choices <- str_trim(unlist(strsplit(state$content[,"Choices"], ";")))
+  correct <- select.list(choices) == state$content[,"Correct.Answer"]
+  respond(correct)
+  if(correct){
+    state$stage <- -1
+    suspend <- suspendQ()
+    return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+  } else {
+    if(!is.na(state$content[,"Hint"])){
+      state$stage <- 2 # we take care of the hint hers
+    }
+    suspend <- suspendQ()
+    return(list(finished=FALSE, prompt=suspend, suspend=suspend, state=state))
+  }
+}
+
 doStage.command <- function(state, expr, val){
   if(state$stage == 1){
     frndlyOut(state$content[1,"Output"])
