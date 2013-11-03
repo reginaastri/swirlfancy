@@ -15,40 +15,61 @@ module$suspended <- TRUE
 # (It's stored as a csv in case openintro is not installed.)
 cars <- read.csv("data/cars.csv", as.is=TRUE, comment.char="#")
 
+# Determines class of content from row n and returns a state 
+# object of that class
 makeState <- function(n){
+  # If n is greater than the total rows of content
   if(n > nrow(module$mod2))return(NULL)
+  # Initialize class name
   cls <- c("state")
+  # Read in content from row n
   content <- module$mod2[n,]
+  # If output type is not text, then the class is defined by whatever
+  # the output type is
   if(content[,"Output.Type"] != "text"){
     cls <- c(content[,"Output.Type"], cls)
   }
+  # If output type is question, then the type of question is added
+  # to the class name
   if(content[,"Output.Type"] == "question"){
     cls <- c(content[,"Answer.Type"], cls)
   }
+  # Return state object with class specified
   structure(list(content=content, row=n, stage=1), class = cls)
 }
 
+# Returns NULL invisibly
 nxt <- function(){
   invisible()
 }
 
+# Initializes callback by the name of "heavy"
 hi <- function(){
+  # Removes any active callbacks
   removeTaskCallback(which(getTaskCallbackNames() == "heavy"))
   # Register function cback() as that to be called
   # upon completion of any "top level" task, i.e., a command the
   # user enters from the R prompt.
   addTaskCallback(cback, name = "heavy")
+  # Assigns first state to state variable in module environment
   module$state <- makeState(1)
+  # Returns NULL invisibly
   invisible()
 }
 
+# Removes active callback and sets state variable to NULL.
+# Effectively ends current swirl session.
 bye <- function(){
   removeTaskCallback(which(getTaskCallbackNames() == "heavy"))
   module$state <- NULL
+  # Return NULL invisibly
   invisible()
 }
 
+# Callback function that gets called after each top-level
+# task (i.e. console command by user)
 cback <- function(expr, val, ok, vis){
+  # If user types nxt() or hi(), then 
   if(identical(expr, parse(text="nxt()")[[1]]) ||
        identical(expr, parse(text="hi()")[[1]])){
     module$suspended <- FALSE
@@ -90,10 +111,12 @@ nextState.default <- function(state){
 }
 
 doStage.command <- function(state, expr, val){
+  # State 1 - First time answering question
   if(state$stage == 1){
     frndlyOut(state$content[1,"Output"])
     state$stage <- 2
     return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+  # State 2 - 
   } else if(state$stage == 2){
     correct.expr <- parse(text=state$content[,"Correct.Answer"])
     ans.is.correct <- identical(val, eval(correct.expr))
