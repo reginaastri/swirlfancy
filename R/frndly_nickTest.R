@@ -2,10 +2,7 @@ library(stringr)
 
 removeTaskCallback(which(getTaskCallbackNames() == "frndly"))
 
-module <- new.env(parent = emptyenv())
-
-module$mod <- read.csv("data/testModSimplest.csv", as.is=TRUE)
-module$rows <- nrow(module$mod)
+frndly <- new.env(parent = emptyenv())
 
 hi <- function() {
   addTaskCallback(auto_advance, name = "frndly")
@@ -14,7 +11,7 @@ hi <- function() {
 }
 
 bye <- function() {
-  frndly_out("All done! Use jmp(1) to restart.")
+  frndly_out("All done! Use jmp('start') to restart.")
   removeTaskCallback(which(getTaskCallbackNames() == "frndly"))
   invisible()
 }
@@ -22,10 +19,12 @@ bye <- function() {
 jmp <- function(state) {
   if (is.null(state)) return(bye())
   
-  state <- module$mod[1, ]
+  state <- get(str_c("state", state))
+  
+  frndly$next_state <- state$next_state
   
   if (!is.null(state$test) && !state$test()) {
-    module$test <- state$test    
+    frndly$test <- state$test    
   }
   
   frndly_out(state$msg)
@@ -37,15 +36,14 @@ jmp <- function(state) {
 }
 
 nxt <- function() {
-  jmp(module$next_state)
+  jmp(frndly$next_state)
 }
 attr(nxt, "source") <- "| Hey you! To evaluate a function in R, you need to put () on the end."
 
 auto_advance <- function(...) {
-  if (is.null(module$test)) return(TRUE)
+  if (is.null(frndly$test)) return(TRUE)
   
-  # Auto-advance if test is true
-  if (module$test()) {
+  if (frndly$test()) {
     nxt()    
   }
   
@@ -70,14 +68,14 @@ state1 <- new_state("Hi! I'm frndly, your friendly introduction to R. I'm
 state2 <- new_state("In R, you create variables with the arrow: <-,
                     like a <- 1 or b <- 2.  To continue, create a new variable called d with the 
                     value 10, or type nxt().", 3, function() {
-                    exists("d", globalenv()) && get("d", globalenv()) == 10 
+                      exists("d", globalenv()) && get("d", globalenv()) == 10 
                     })
 
 state3 <- new_state("You are doing so well!", 4)
 
 state4 <- new_state("Now create a variable called f with 4 times the value of d.", 5, function() {
-                      exists("f", globalenv()) && get("f", globalenv()) == 40 
-                    })
+  exists("f", globalenv()) && get("f", globalenv()) == 40 
+})
 
 state5 <- new_state("Good work!", NULL)
 
