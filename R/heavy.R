@@ -59,6 +59,7 @@ cback <- function(expr, val, ok, vis){
   while(n < 20){
     n <- n+1
     state <- module$state
+    if(is.null(state))return(FALSE) # will unregister callback
     response <- doStage(state, expr, val)
     module$suspended <- response$suspend
     if(response$finished){
@@ -98,8 +99,7 @@ doStage.video <- function(state, expr, val){
     frndlyOut("Type nxt() to continue.")
     return(list(finished=TRUE, prompt=TRUE, suspend=TRUE, state=state))
   } else {
-    suspend <- suspendQ()
-    return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+    return(list(finished=TRUE, prompt=FALSE, suspend=FALSE, state=state))
   }
 }
 
@@ -107,8 +107,6 @@ doStage.figure <- function(state, exper, val){
   frndlyOut(state$content[,"Output"])
   file.path <- paste("R",state$content[,"Figure"],sep="/")
   source(file=file.path, local=TRUE)
-  if(state$content[,"Figure.Type"] == "addition"){
-    frndlyOut("I'm displaying the previous plot in case you need to refer back to it.")}
   suspend <- suspendQ()
   state$stage <- -1
   return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
@@ -126,14 +124,88 @@ doStage.multiple <- function(state, expr, val){
   respond(correct)
   if(correct){
     state$stage <- -1
-    suspend <- suspendQ()
-    return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+    frndlyOut("") # put in an empty line for visibility
+    return(list(finished=TRUE, prompt=FALSE, suspend=FALSE, state=state))
   } else {
     if(!is.na(state$content[,"Hint"])){
-      state$stage <- 2 # we take care of the hint hers
+      state$stage <- 2 # we take care of the hint here
+    }
+    return(list(finished=FALSE, prompt=FALSE, suspend=FALSE, state=state))
+  }
+}
+
+doStage.text <- function(state, expr, val){
+  if(state$stage==1){
+    frndlyOut(state$content[,"Output"])
+  } else {
+    # There may not be a hint, but we handle that below
+    frndlyOut(state$content[,"Hint"])
+  }
+  correct.ans <- str_trim(unlist(strsplit(state$content[,"Correct.Answer"],",")))
+  user.ans <- str_trim(unlist(strsplit(readline("ANSWER: "),",")))
+  correct <- identical(sort(correct.ans), sort(user.ans))
+  respond(correct)
+  if(correct){
+    state$stage <- -1
+    frndlyOut("")
+    return(list(finished=TRUE, prompt=FALSE, suspend=FALSE, state=state))
+  } else {
+    if(!is.na(state$content[,"Hint"])){
+      state$stage <- 2 # we take care of the hint here
     }
     suspend <- suspendQ()
     return(list(finished=FALSE, prompt=suspend, suspend=suspend, state=state))
+  }
+}
+
+doStage.exact <- function(state, expr, val){
+  if(state$stage == 1){
+    frndlyOut(state$content[1,"Output"])
+    state$stage <- 2
+    return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+  } else if(state$stage == 2){
+    is.correct <- FALSE
+    if(is.numeric(val)){
+      correct.ans <- eval(parse(text=state$content[,"Correct.Answer"]))
+      epsilon <- 0.01*abs(correct.ans)
+      is.correct <- abs(val-correct.ans) < epsilon
+    }
+    if(is.correct){
+      respond(TRUE)
+      frndlyOut("")
+      state$stage <- -1
+      return(list(finished=TRUE, prompt=FALSE, suspend=FALSE, state=state))
+    } else {
+      respond(FALSE)
+      state$stage <- 2 # Try again, after hint
+      frndlyOut(state$content[1,"Hint"])
+      return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+    }
+  }
+}
+
+doStage.range <- function(state, expr, val){
+  if(state$stage == 1){
+    frndlyOut(state$content[1,"Output"])
+    state$stage <- 2
+    return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+  } else if(state$stage == 2){
+    is.correct <- FALSE
+    if(is.numeric(val)){
+      temp <- as.numeric(unlist(strsplit(state$content[,"Correct.Answer"],";")))
+      is.correct <- temp[1] <= val && val <= temp[2]
+    }
+    if(is.correct){
+      respond(TRUE)
+      frndlyOut("")
+      state$stage <- -1
+      return(list(finished=TRUE, prompt=FALSE, suspend=FALSE, state=state))
+    } else {
+      respond(FALSE)
+      state$stage <- 2 # Try again, after hint
+      frndlyOut(state$content[1,"Hint"])
+      return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
+    }
   }
 }
 
@@ -148,9 +220,9 @@ doStage.command <- function(state, expr, val){
     call.is.correct <- identical(expr, correct.expr[[1]])
     if(ans.is.correct && call.is.correct){
       respond(TRUE)
-      suspend <- suspendQ()
+      frndlyOut("")
       state$stage <- -1
-      return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
+      return(list(finished=TRUE, prompt=FALSE, suspend=FALSE, state=state))
     } else if(ans.is.correct && !call.is.correct){
       state$stage <- -1
       frndlyOut(paste("You got the right value but used a different expression for the purpose. You entered ", as.character(as.expression(expr)),", while I had expected", state$content[,"Correct.Answer"]))
