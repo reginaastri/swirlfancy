@@ -9,3 +9,5 @@ Control and units of instruction ("content") communicate via two methods, nextSt
 "NickTestS3.R" re-implements nickTest.R according to the conventions described above. The point is to stress the interface, i.e., to test whether the same behavior can be obtained just by adding content code without changing control code. NickTestS3.R uses precisely the same callback as does heavy.R. Two content classes, "nickNoTestState," and "nickTestState" are implemented. Source the file and type hiNickTest() to run.
 
 Files frndly.R, demo.R, and the original nickTest.R are included for reference. 
+
+![flowchart](flowchart.svg)
