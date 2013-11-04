@@ -10,4 +10,4 @@ Control and units of instruction ("content") communicate via two methods, nextSt
 
 Files frndly.R, demo.R, and the original nickTest.R are included for reference. 
 
-![flowchart](flowchart.svg)
+![flowchart](flowchart.png)
