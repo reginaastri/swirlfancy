@@ -1,20 +1,5 @@
 library(stringr)
 
-# Implement the module content and state as an empty environment,
-# following Hadley.
-module <- new.env(parent = emptyenv())
-
-# Read swirl 1.0 course content into the module environment
-module$mod2 <- read.csv("data/mod2.csv", as.is=TRUE)
-# As a convenience, store mod2's number of rows there too.
-module$rows <- nrow(module$mod2)
-# Indicate that we are not waiting for user input
-module$suspended <- TRUE
-
-# Read the cars dataset from the openintro package into the global env.
-# (It's stored as a csv in case openintro is not installed.)
-cars <- read.csv("data/cars.csv", as.is=TRUE, comment.char="#")
-
 makeState <- function(n){
   if(n > nrow(module$mod2))return(NULL)
   cls <- c("state")
@@ -32,7 +17,16 @@ nxt <- function(){
   invisible()
 }
 
-hi <- function(){
+hiHeavy <- function(){
+  module <- new.env(parent = emptyenv())
+  # Read swirl 1.0 course content into the module environment
+  module$mod2 <- read.csv("data/mod2.csv", as.is=TRUE)
+  # As a convenience, store mod2's number of rows there too.
+  module$rows <- nrow(module$mod2)
+  # Indicate that we are not waiting for user input
+  module$suspended <- FALSE
+  assign("module", module, envir=globalenv())
+  assign("cars", read.csv("data/cars.csv", as.is=TRUE, comment.char="#"), envir=globalenv())
   removeTaskCallback(which(getTaskCallbackNames() == "heavy"))
   # Register function cback() as that to be called
   # upon completion of any "top level" task, i.e., a command the
@@ -42,7 +36,7 @@ hi <- function(){
   invisible()
 }
 
-bye <- function(){
+byeHeavy <- function(){
   removeTaskCallback(which(getTaskCallbackNames() == "heavy"))
   module$state <- NULL
   invisible()
