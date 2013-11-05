@@ -23,7 +23,6 @@ hiHeavy <- function(){
   module$mod2 <- read.csv("data/mod2.csv", as.is=TRUE)
   # As a convenience, store mod2's number of rows there too.
   module$rows <- nrow(module$mod2)
-  # Indicate that we are not waiting for user input
   module$suspended <- FALSE
   assign("module", module, envir=globalenv())
   assign("cars", read.csv("data/cars.csv", as.is=TRUE, comment.char="#"), envir=globalenv())
