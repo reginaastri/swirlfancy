@@ -1,4 +1,5 @@
 library(stringr)
+library(plotrix)
 
 makeState <- function(n){
   if(n > nrow(module$mod2))return(NULL)
@@ -17,10 +18,12 @@ nxt <- function(){
   invisible()
 }
 
-hiHeavy <- function(){
+hiHeavy <- function(module_of_data){
+  if (missing(module_of_data))
+    module_of_data <- "data/mod2.csv"
   module <- new.env(parent = emptyenv())
   # Read swirl 1.0 course content into the module environment
-  module$mod2 <- read.csv("data/mod2.csv", as.is=TRUE)
+  module$mod2 <- read.csv(module_of_data, as.is=TRUE)
   # As a convenience, store mod2's number of rows there too.
   module$rows <- nrow(module$mod2)
   module$suspended <- FALSE
