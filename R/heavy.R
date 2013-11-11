@@ -20,10 +20,12 @@ nxt <- function(){
 
 hiHeavy <- function(course, module_of_data){
   if (missing(course)){
-    course <- getCourseName()
+    course <- chooseCourse()
   }
   if (missing(module_of_data)){
     module_of_data <- getModule()
+    cat("\nOn which module would you like to begin?")
+    module.start <- readline("\nANSWER: ")
   }
 
   module <- new.env(parent = emptyenv())
@@ -73,15 +75,40 @@ cback <- function(expr, val, ok, vis){
   return(TRUE)
 }
 
-getCourseName <- function(){
-  
-  
+
+chooseCourse <- function() {
+  #courseDirList <- list.files(path=file.path(path.package("swirl"), "Courses"))
+  courseList <- list("Data_Analysis", "Mathematical_Biostatistics_Boot_Camp_2","Open_Intro")
+
+  cat("\nWhich course would you like to take?\n")
+  courseName <- select.list(courseNames)
+ 
+  #return(list(courseDirName, courseName))
+  return(courseName)
 }
 
-getModule <- function(){
+getModule <- function(courseName){
+  if ((identical(courseName,"Data_Analysis")) ||(identical(courseName,"Mathematical_Biostatistics_Boot_Camp_2")))
+    {
+    modChoice <- paste("Module",1:3,sep="")
+  }
+  else if (identical(courseName,"Open_Intro")){
+    modChoice <- "Module1"
+  }
+  else{
+    frndlyOut("That's not an option. Try again")
+    byeHeavy()
+    return(TRUE)
+  }
+  modList <- list(modChoice)
   
-  
+  cat("\nWhich course would you like to take?\n")
+  modNumber <- select.list(modList)
+ 
+  return(modNumber)
 }
+  
+
 
 ### STATES
 
