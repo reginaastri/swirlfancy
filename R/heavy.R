@@ -18,9 +18,14 @@ nxt <- function(){
   invisible()
 }
 
-hiHeavy <- function(module_of_data){
-  if (missing(module_of_data))
-    module_of_data <- "data/mod2.csv"
+hiHeavy <- function(course, module_of_data){
+  if (missing(course)){
+    course <- getCourseName()
+  }
+  if (missing(module_of_data)){
+    module_of_data <- getModule()
+  }
+
   module <- new.env(parent = emptyenv())
   # Read swirl 1.0 course content into the module environment
   module$mod2 <- read.csv(module_of_data, as.is=TRUE)
@@ -66,6 +71,16 @@ cback <- function(expr, val, ok, vis){
     if(response$prompt)break
   } 
   return(TRUE)
+}
+
+getCourseName <- function(){
+  
+  
+}
+
+getModule <- function(){
+  
+  
 }
 
 ### STATES
