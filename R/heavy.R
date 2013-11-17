@@ -18,29 +18,36 @@ nxt <- function(){
   invisible()
 }
 
-hiHeavy <- function(course, module_of_data){
-  if (missing(course)){
-    course <- chooseCourse()
-  }
-  if (missing(module_of_data)){
-    module_of_data <- getModule()
-    cat("\nOn which module would you like to begin?")
-    module.start <- readline("\nANSWER: ")
-  }
-
+hiHeavy <- function(){
+  #the pwr package needed for Biostat_Bootcamp module
+  if(!require(pwr)){install.packages("pwr"); require(pwr)}
+  
+  #get course and module names using swirl1's helper functions and menus
+  course <- unlist(chooseCourse())
+  data_module <- getModule(course)
+  #create path names to find course data (questions,answers,hints) 
+  path <- paste(text="R/Courses/",paste(course, data_module, sep="/"),sep="",text="/")
+  module_of_data <- paste(path,substr(data_module,1,3),substr(data_module,7,7),sep="",text=".csv")
+  
   module <- new.env(parent = emptyenv())
   # Read swirl 1.0 course content into the module environment
   module$mod2 <- read.csv(module_of_data, as.is=TRUE)
   # As a convenience, store mod2's number of rows there too.
   module$rows <- nrow(module$mod2)
   module$suspended <- FALSE
+  module$path <- path
+  
   assign("module", module, envir=globalenv())
   assign("cars", read.csv("data/cars.csv", as.is=TRUE, comment.char="#"), envir=globalenv())
+  assign("mpg.midsize", cars[cars$type=="midsize","mpgCity"], envir=globalenv())
+  
   removeTaskCallback(which(getTaskCallbackNames() == "heavy"))
   # Register function cback() as that to be called
   # upon completion of any "top level" task, i.e., a command the
   # user enters from the R prompt.
   addTaskCallback(cback, name = "heavy")
+  
+  #make the first state
   module$state <- makeState(1)
   invisible()
 }
@@ -58,8 +65,8 @@ cback <- function(expr, val, ok, vis){
   }
   if(module$suspended)return(TRUE)
   
-  n <- 1 # to avoid any infinte loop
-  while(n < 20){
+  n <- 1 
+  while(n < 20){ # limit n to avoid any infinte loop
     n <- n+1
     state <- module$state
     if(is.null(state))return(FALSE) # will unregister callback
@@ -81,29 +88,29 @@ chooseCourse <- function() {
   courseList <- list("Data_Analysis", "Mathematical_Biostatistics_Boot_Camp_2","Open_Intro")
 
   cat("\nWhich course would you like to take?\n")
-  courseName <- select.list(courseNames)
+  courseName <- select.list(courseList)
  
-  #return(list(courseDirName, courseName))
+  #print(paste(text="Chosen course is ",courseName))
   return(courseName)
 }
 
 getModule <- function(courseName){
-  if ((identical(courseName,"Data_Analysis")) ||(identical(courseName,"Mathematical_Biostatistics_Boot_Camp_2")))
+
+  if ((identical(courseName,"Data_Analysis")) ||
+        (identical(courseName,"Mathematical_Biostatistics_Boot_Camp_2")))
     {
-    modChoice <- paste("Module",1:3,sep="")
+    modChoice <- paste("module",1:3,sep="")
   }
   else if (identical(courseName,"Open_Intro")){
-    modChoice <- "Module1"
+    modChoice <- "module1"
   }
   else{
-    frndlyOut("That's not an option. Try again")
-    byeHeavy()
-    return(TRUE)
+    frndlyOut("That's not an option. You're starting at module1, buster!")
+    return("module1")
   }
-  modList <- list(modChoice)
   
   cat("\nWhich course would you like to take?\n")
-  modNumber <- select.list(modList)
+  modNumber <- select.list(modChoice)
  
   return(modNumber)
 }
@@ -118,9 +125,7 @@ nextState <- function(state)UseMethod("nextState")
 doStage.default <- function(state, expr, val){
   frndlyOut(state$content[1,"Output"])
   state$stage <- state$stage+1
-  temp <- readline("Press <enter> to continue: ")
-  suspend <- temp != ""
-  if(suspend)frndlyOut("Type nxt() to continue.")
+  suspend <- suspendQ()
   return(list(finished=TRUE, prompt=suspend, suspend=suspend, state=state))
 }
 
@@ -143,7 +148,7 @@ doStage.video <- function(state, expr, val){
 
 doStage.figure <- function(state, exper, val){
   frndlyOut(state$content[,"Output"])
-  file.path <- paste("R",state$content[,"Figure"],sep="/")
+  file.path <- paste(module$path,state$content[,"Figure"],sep="/")
   source(file=file.path, local=TRUE)
   suspend <- suspendQ()
   state$stage <- -1
@@ -206,7 +211,7 @@ doStage.exact <- function(state, expr, val){
     if(is.numeric(val)){
       correct.ans <- eval(parse(text=state$content[,"Correct.Answer"]))
       epsilon <- 0.01*abs(correct.ans)
-      is.correct <- abs(val-correct.ans) < epsilon
+      is.correct <- abs(val-correct.ans) <= epsilon
     }
     if(is.correct){
       respond(TRUE)
@@ -251,10 +256,20 @@ doStage.command <- function(state, expr, val){
   if(state$stage == 1){
     frndlyOut(state$content[1,"Output"])
     state$stage <- 2
+    state$correct.ans <- eval(parse(text=state$content[,"Correct.Answer"]))
     return(list(finished=FALSE, prompt=TRUE, suspend=FALSE, state=state))
   } else if(state$stage == 2){
     correct.expr <- parse(text=state$content[,"Correct.Answer"])
-    ans.is.correct <- identical(val, eval(correct.expr))
+    
+    ans.is.correct <- FALSE
+    if(is.numeric(val)){
+      epsilon <- 0.01*abs(state$correct.ans)
+      ans.is.correct <- abs(val-state$correct.ans) <= epsilon
+    }
+    else {
+      ans.is.correct <- TRUE
+    }
+    #ans.is.correct <- identical(val, eval(correct.expr))
     call.is.correct <- identical(expr, correct.expr[[1]])
     if(ans.is.correct && call.is.correct){
       respond(TRUE)
@@ -297,8 +312,8 @@ respond <- function(correct){
 }
 
 suspendQ <- function(){
-  temp <- readline("Press <enter> to continue: ")
-  suspend <- temp != ""
+  temp <- readline("...")
+  suspend <- temp == "play"
   if(suspend)frndlyOut("Type nxt() to continue.")
   return(suspend)
 }
