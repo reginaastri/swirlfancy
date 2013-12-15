@@ -5,6 +5,8 @@
 # > load_all()
 # source this file. The test will succeed.
 
+context("Learning testthat")
+
 test_that("runTest.newVar and runTest.result can handle random vectors.", {
   # Code in curly brackets, the second argument to test_that
   e <- new.env()
