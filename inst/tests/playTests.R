@@ -1,5 +1,7 @@
 # Experimental tests for learning testthat
 
+# install.packages("testthat") # (if necessary)
+# install.packages("devtools") # (if necessary)
 # require(testthat)
 # require(devtools)
 # > load_all()
