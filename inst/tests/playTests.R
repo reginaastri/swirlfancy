@@ -1,8 +1,8 @@
 # Experimental tests for learning testthat
 
-# require(testthat)
-# require(devtools)
-# > load_all()
+require(testthat)
+require(devtools)
+load_all()
 # source this file. The test will succeed.
 
 context("Learning testthat")
