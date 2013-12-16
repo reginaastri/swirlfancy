@@ -1,9 +1,11 @@
 # Experimental tests for learning testthat
 
-require(testthat)
-require(devtools)
-load_all()
-# source this file. The test will succeed.
+# install.packages("testthat") # (if necessary)
+# install.packages("devtools") # (if necessary)
+# require(testthat)
+# require(devtools)
+# > load_all()
+# > test_dir("inst/tests/")
 
 context("Learning testthat")
 
