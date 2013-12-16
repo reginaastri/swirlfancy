@@ -5,7 +5,7 @@
 # require(testthat)
 # require(devtools)
 # > load_all()
-# source this file. The test will succeed.
+# > test_dir("inst/tests/")
 
 context("Learning testthat")
 
