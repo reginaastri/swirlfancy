@@ -6,36 +6,34 @@ nxtMod <- function(){
   } else {
     last <- sort(dir(testmods), decreasing=TRUE)[1]
   }
-  1 + as.numeric(substr(lastMod(), nchar(last), nchar(last)))
+  1 + as.numeric(substr(last, nchar(last), nchar(last)))
 }
 
-saveAs <- function(n = nxtMod()){
-  if(!exists("module", globalenv()))stop("No module present in global environment")
-  moddir <- file.path(testmods, paste0("module",n))
-  if(!dir.exists(moddir))dir.create(moddir)
-  fpath <- file.path(moddir, paste0("mod",n,"_new.csv"))
-  write.csv(mod, file=fpath, row.names=FALSE)
-}
 
-newrow <- function(Class=NA, Output=NA, CorrectAnswer=NA, AnswerChoices=NA, AnswerTests=NA, Hint=NA, Figure=NA, FigureType=NA, VideoLink=NA){
+newSrc <- function(n = nxtMod()){
+  nwrow <- '\nnewrow <- function(Class=NA, Output=NA, CorrectAnswer=NA, AnswerChoices=NA, AnswerTests=NA, 
+                               Hint=NA, Figure=NA, FigureType=NA, VideoLink=NA){
   temp <- data.frame(Class=Class, Output=Output, CorrectAnswer=CorrectAnswer, 
                      AnswerChoices=AnswerChoices, AnswerTests=AnswerTests, Hint=Hint,
                      Figure=Figure, FigureType=FigureType, VideoLink=VideoLink)
-}
-
-newMod <- function(sourcefile){
-  if(exists("module", globalenv())){
-    print("A module already exists, do you want to overwrite it?")
-    ans <- readline("yes or no: ")
-    if(ans != "yes")stop("Exiting to save module")
+}\n'
+  svmod <- '\nsavemod <- function(){
+  write.csv(module, modpath, row.names=FALSE)
+}\n'
+  moddir <- file.path(testmods, paste0("module",n))
+  if(file.exists(moddir)){
+    ans <- readline(paste(moddir, "already exists. Continue? "))
+    if(ans != yes)return()
   }
-  if(exists("module", globalenv())){
-    print(paste(sourcefile, "already exists, do you want to add to it?")
-    ans <- readline("yes or no: ")
-    if(ans != "yes")stop("Exiting to change source file")
-  }
-  assign("module", newrow(), globalenv())
-  assign("sourcefile", sourcefile, globalenv())
+  dir.create(moddir)
+  sourcefile <<- file.path(moddir, paste0("mod",n,".R"))
+  file.create(sourcefile)
+  modpath <- file.path(moddir, paste0("mod_", n, ".csv"))
+  cat(paste0('modpath <- "', modpath,'"\n'), file=sourcefile, append=TRUE)
+  cat(svmod, file=sourcefile, append=TRUE)
+  cat(nwrow, file=sourcefile, append=TRUE )
+  defmod <- paste(c('\nmodule <- newrow(', rep("NULL, ", 8), "NULL" , ')'), collapse="")
+  cat(defmod, file=sourcefile, append=TRUE)
 }
 
 hlp <- function(){
@@ -45,7 +43,10 @@ hlp <- function(){
   print("vid -- video")
   print("fig -- figure")
   print("qx -- question requiring exact numerical answer")
-  print("")
+  print("qrng -- range question, requiring c(num1, num2) answer")
+  print("qtxt -- question requiring one-word text answer")
+  print("qmany -- question requiring several words in any order")
+  print("qord -- question requiring several words in specific order")
 }
 
 # text
