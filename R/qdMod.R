@@ -34,6 +34,7 @@ newSrc <- function(n = nxtMod()){
   cat(nwrow, file=sourcefile, append=TRUE )
   defmod <- paste(c('\nmodule <- newrow(', rep("NULL, ", 8), "NULL" , ')'), collapse="")
   cat(defmod, file=sourcefile, append=TRUE)
+  file.edit(sourcefile)
 }
 
 hlp <- function(){
