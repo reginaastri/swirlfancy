@@ -9,7 +9,8 @@ nxtMod <- function(){
   1 + as.numeric(substr(last, nchar(last), nchar(last)))
 }
 
-
+# Creates a new qdmod.R source file in the Test Module directory
+# @param n the number of a module subdirectory; default is next available
 newSrc <- function(n = nxtMod()){
   nwrow <- '\nnewrow <- function(Class=NA, Output=NA, CorrectAnswer=NA, AnswerChoices=NA, AnswerTests=NA, 
                                Hint=NA, Figure=NA, FigureType=NA, VideoLink=NA){
@@ -37,6 +38,7 @@ newSrc <- function(n = nxtMod()){
   file.edit(sourcefile)
 }
 
+# qdmod help
 hlp <- function(){
   print("txt -- just text, no question")
   print("qmult -- multiple choice question")
@@ -44,132 +46,99 @@ hlp <- function(){
   print("vid -- video")
   print("fig -- figure")
   print("qx -- question requiring exact numerical answer")
-  print("qrng -- range question, requiring c(num1, num2) answer")
   print("qtxt -- question requiring one-word text answer")
-  print("qmany -- question requiring several words in any order")
-  print("qord -- question requiring several words in specific order")
 }
 
-# text
+# template for presentation without a question
 txt <- function(){
 cat('\n
+# just text, no question
 module <- rbind(module, newrow(
   Class="text", 
-  Output="stuff"
+  Output="commentary"
   ))', file=sourcefile, append=TRUE)
 invisible()
 }
 
-# mult_question
+# template for multiple choice question
 qmult <- function(){
 cat('\n
+# multiple choice question
 module <- rbind(module, newrow(
   Class="mult_question",
   Output="stuff",
   Choices="ANS,2,3",
   CorrectAnswer="ANS"
-  AnswerTests="matches=ANS"
+  AnswerTests="omnitest(correctVal=ANS)"
   ))', file=sourcefile, append=TRUE)
 invisible()
 }
 
-# cmd_question
+# template for command question
 qcmd <- function(){
 cat('\n
+# requires user to enter a command
 module <- rbind(module, newrow(
   Class="cmd_question",
   Output="stuff",
   CorrectAnswer="whatever",
-  AnswerTests="uses_func=;equivalent=;creates_var=;equals=expr,name;identical=expr,val_length=",
+  AnswerTests="omnitest(correctExpr=???, correctVal=???)",
   Hint="hint"
   ))', file=sourcefile, append=TRUE)
 invisible()
 }
 
-# video
+# template for video
 vid <- function(){
 cat('\n
+# asks if user would like to watch a video
 module <- rbind(module, newrow(
   Class="video",
-  Output="stuff",
+  Output="Would you like to watch a video?",
   VideoLink="http://address.of.video"
   ))', file=sourcefile, append=TRUE)
 invisible()
 }
 
-# figure
+# template for figure
+
 fig <- function(){
 cat('\n
+# presents a figure with commentary
+# code to draw figure must be in sourcefile.R
 module <- rbind(module, newrow(
   Class="figure",
-  Output="stuff",
+  Output="commentary",
   Figure="sourcefile.R",
   FigureType="new or old"
   ))', file=sourcefile, append=TRUE)
 invisible()
 }
 
-# exact_question
+# template for question requiring an exact numerical
+# answer
 qx<- function(){
 cat('\n
+# User must give an exact, numerical answer
 module <- rbind(module, newrow(
   Class="exact_question",
   Output="stuff",
-  CorrectAnswer="n",
-  AnswerTests="exact=n"
+  CorrectAnswer=n,
+  AnswerTests="omnitest(correctVal=n)",
   Hint="hint"
   ))', file=sourcefile, append=TRUE)
 invisible()
 }
 
-# range_question
-qrng <- function(){
-cat('\n
-module <- rbind(module, newrow(
-  Class="range_question",
-  Output="stuff",
-  CorrectAnswer="n1,n2",
-  AnswerTests="range=n1,n2"
-  Hint="hint"
-  ))', file=sourcefile, append=TRUE)
-invisible()
-}
-
-
-# text_question
+# template for question requiring an exact textual answer 
 qtxt <- function(){
 cat('\n
+# requires the user to respond with text via readline 
 module <- rbind(module, newrow(
   Class="text_question",
   Output="stuff",
-  CorrectAnswer="word",
-  AnswerTests="matches=word"
-  Hint="hint"
-  ))', file=sourcefile, append=TRUE)
-invisible()
-}
-
-# text_many_question
-qmany <- function(){
-cat('\n
-module <- rbind(module, newrow(
-  Class="text_many_question",
-  Output="stuff",
-  CorrectAnswer="word1,word2,word3",
-  AnswerTests="word_many=word1,word2,word3",
-  Hint="hint"
-  ))', file=sourcefile, append=TRUE)
-invisible()
-}
-
-# text_order_question       
-qord <- function(){
-cat('\n
-module <- rbind(module, newrow(
-  Class="text_order_question",
-  Output="stuff",
-  CorrectAnswer="word1,word2,word3",
-  AnswerTests="word_order=word1,word2,word3",
+  CorrectAnswer="answer",
+  AnswerTests="omnitest(correctVal=answer)"
   Hint="hint"
   ))', file=sourcefile, append=TRUE)
 invisible()
