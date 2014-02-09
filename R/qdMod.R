@@ -29,7 +29,7 @@ newSrc <- function(n = nxtMod()){
   dir.create(moddir)
   sourcefile <<- file.path(moddir, paste0("mod",n,".R"))
   file.create(sourcefile)
-  modpath <- file.path(moddir, paste0("mod_", n, ".csv"))
+  modpath <- file.path(moddir, paste0("mod", n, "_new.csv"))
   cat(paste0('modpath <- "', modpath,'"\n'), file=sourcefile, append=TRUE)
   cat(svmod, file=sourcefile, append=TRUE)
   cat(nwrow, file=sourcefile, append=TRUE )
